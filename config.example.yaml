@@ -14,8 +14,11 @@ sources:
     writable: false
 
   # Obsidian 볼트 — 유일한 쓰기 대상 (note_target)
+  # path_env가 설정돼 있으면 그 값이 우선이고, 없으면 path를 씀.
+  # 이렇게 해두면 이 파일 자체는 여러 PC에서 그대로 공유하고, PC마다 환경변수만 다르게 설정하면 됨.
   - id: obsidian-notes
     type: markdown
+    path_env: OBSIDIAN_VAULT_PATH
     path: "~/Documents/ObsidianVault"
     writable: true
 

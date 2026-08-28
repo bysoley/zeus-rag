@@ -4,6 +4,7 @@ fake_embed로 임베딩만 대체하고, 나머지(청킹/증분 재인덱싱/�
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 from pathlib import Path
 
@@ -128,6 +129,25 @@ def test_excluded_files_not_indexed():
         print("OK: excluded dirs/files not indexed")
 
 
+def test_path_env_overrides_path():
+    env_key = "LOCAL_CONTEXT_ASSISTANT_TEST_PATH"
+    try:
+        os.environ[env_key] = "/from/env"
+        resolved = rag.resolve_source_path(
+            {"path_env": env_key, "path": "/from/config"}
+        )
+        assert resolved == Path("/from/env").expanduser().resolve()
+
+        del os.environ[env_key]
+        resolved = rag.resolve_source_path(
+            {"path_env": env_key, "path": "/from/config"}
+        )
+        assert resolved == Path("/from/config").expanduser().resolve()
+        print("OK: path_env overrides path when set, falls back otherwise")
+    finally:
+        os.environ.pop(env_key, None)
+
+
 def test_note_path_traversal_blocked():
     with tempfile.TemporaryDirectory() as tmp:
         vault_dir = Path(tmp) / "vault"
@@ -148,6 +168,7 @@ def main():
     test_deleted_file_removed_from_index()
     test_source_filter()
     test_excluded_files_not_indexed()
+    test_path_env_overrides_path()
     test_note_path_traversal_blocked()
     print("모든 테스트 통과")
 
