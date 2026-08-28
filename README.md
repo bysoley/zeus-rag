@@ -2,7 +2,7 @@
 
 Ollama를 이용해 노트, AI 메모리, 소스코드와 문서를 검색하고 Git으로 마크다운 메모를 관리하는 로컬 RAG 애플리케이션.
 
-완전 로컬(Ollama)에서만 동작한다. Obsidian 볼트, Claude Code/Codex 메모리, 등록한 git 프로젝트, 일반 로컬 문서를 검색 대상으로 삼아 질문에 답하고, 채팅으로 남긴 메모는 Obsidian 볼트에 Markdown + git 커밋으로 저장한다. 회사 PC/개인 PC에 각각 독립적으로 설치하며, 두 PC 사이의 데이터 동기화는 하지 않는다.
+완전 로컬(Ollama)에서만 동작한다. Obsidian 볼트, Claude Code/Codex 메모리, 등록한 git 프로젝트, 일반 로컬 문서를 검색 대상으로 삼아 질문에 답하고, 채팅으로 남긴 메모는 Obsidian 볼트에 Markdown + git 커밋으로 저장한다. PC 사이에 데이터 동기화는 하지 않는다.
 
 ## 1. 사전 준비
 
