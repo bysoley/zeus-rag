@@ -44,7 +44,7 @@ def test_code_line_numbers():
 
 
 def test_stale_chunks_removed_on_shrink():
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         tmp_dir = Path(tmp)
         vault_dir = tmp_dir / "vault"
         vault_dir.mkdir()
@@ -71,7 +71,7 @@ def test_stale_chunks_removed_on_shrink():
 
 
 def test_deleted_file_removed_from_index():
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         tmp_dir = Path(tmp)
         vault_dir = tmp_dir / "vault"
         vault_dir.mkdir()
@@ -91,7 +91,7 @@ def test_deleted_file_removed_from_index():
 
 
 def test_source_filter():
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         tmp_dir = Path(tmp)
         vault_dir = tmp_dir / "vault"
         code_dir = tmp_dir / "code"
@@ -114,7 +114,7 @@ def test_source_filter():
 
 
 def test_excluded_files_not_indexed():
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         docs_dir = Path(tmp) / "docs"
         (docs_dir / "node_modules").mkdir(parents=True)
         (docs_dir / "node_modules" / "lib.js").write_text("ignored", encoding="utf-8")
@@ -149,7 +149,7 @@ def test_path_env_overrides_path():
 
 
 def test_note_path_traversal_blocked():
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         vault_dir = Path(tmp) / "vault"
         vault_dir.mkdir()
         try:
