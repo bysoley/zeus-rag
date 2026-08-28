@@ -1,4 +1,4 @@
-"""로컬 컨텍스트 AI 비서 — Gradio 로컬 웹 UI (Ask / Save Note)."""
+"""로컬 RAG 애플리케이션 — Gradio 로컬 웹 UI (Ask / Save Note)."""
 from __future__ import annotations
 
 import logging
@@ -154,8 +154,8 @@ def save_note(title: str, folder: str, tags_raw: str, body: str):
     return "\n".join(lines), status_text()
 
 
-with gr.Blocks(title="로컬 컨텍스트 AI 비서", analytics_enabled=False) as demo:
-    gr.Markdown("## 로컬 컨텍스트 AI 비서")
+with gr.Blocks(title="로컬 RAG 애플리케이션", analytics_enabled=False) as demo:
+    gr.Markdown("## 로컬 RAG 애플리케이션")
     with gr.Row():
         status_box = gr.Textbox(
             label="상태", value=status_text(), interactive=False, lines=5, scale=4
