@@ -11,8 +11,31 @@ export interface Status {
 }
 
 export interface Message {
+  id?: number
+  conversation_id?: string
   role: 'user' | 'assistant'
   content: string
-  sources?: string
-  error?: boolean
+  scope?: string | null
+  sources: SourceRef[]
+  status: 'streaming' | 'complete' | 'error' | 'interrupted'
+  created_at?: string
+}
+
+export interface SourceRef {
+  label: string
+  source_id: string
+  relative_path: string
+  similarity: number
+  heading?: string | null
+  start_line?: number | null
+  end_line?: number | null
+  provider?: string | null
+}
+
+export interface Conversation {
+  id: string
+  title: string
+  created_at: string
+  updated_at: string
+  message_count: number
 }

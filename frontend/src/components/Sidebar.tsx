@@ -1,15 +1,32 @@
 import { useState } from 'react'
-import { MessageCircle, FileText, RefreshCw, Zap } from 'lucide-react'
-import type { Page, Status } from '../types'
+import { MessageCircle, FileText, Plus, RefreshCw, Trash2, Zap } from 'lucide-react'
+import type { Conversation, Page, Status } from '../types'
 
 interface Props {
   page: Page
   setPage: (p: Page) => void
   status: Status | null
   onReindex: () => Promise<unknown>
+  conversations: Conversation[]
+  selectedConversationId: string | null
+  chatBusy: boolean
+  onNewConversation: () => void
+  onSelectConversation: (id: string) => void
+  onDeleteConversation: (id: string) => Promise<void>
 }
 
-export default function Sidebar({ page, setPage, status, onReindex }: Props) {
+export default function Sidebar({
+  page,
+  setPage,
+  status,
+  onReindex,
+  conversations,
+  selectedConversationId,
+  chatBusy,
+  onNewConversation,
+  onSelectConversation,
+  onDeleteConversation,
+}: Props) {
   const [reindexing, setReindexing] = useState(false)
   const [reindexMsg, setReindexMsg] = useState('')
 
@@ -34,12 +51,13 @@ export default function Sidebar({ page, setPage, status, onReindex }: Props) {
 
   const navItem = (id: Page, icon: React.ReactNode, label: string) => (
     <button
-      onClick={() => setPage(id)}
+      onClick={() => { if (!chatBusy) setPage(id) }}
+      disabled={chatBusy}
       className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         page === id
           ? 'bg-accent/10 text-accent'
           : 'text-muted hover:text-white hover:bg-surface-3'
-      }`}
+      } disabled:opacity-50`}
     >
       {icon}
       {label}
@@ -55,10 +73,52 @@ export default function Sidebar({ page, setPage, status, onReindex }: Props) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-1 p-3 flex-1">
+      <nav className="flex flex-col gap-1 px-3">
         {navItem('chat', <MessageCircle size={15} />, '대화')}
         {navItem('save-note', <FileText size={15} />, '노트 저장')}
       </nav>
+
+      <div className="px-3 pt-4 flex-1 min-h-0 flex flex-col">
+        <button
+          onClick={onNewConversation}
+          disabled={chatBusy}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-muted hover:text-white hover:bg-surface-3 transition-colors disabled:opacity-40"
+        >
+          <Plus size={13} />
+          새 대화
+        </button>
+        <div className="mt-2 overflow-y-auto space-y-1">
+          {conversations.map(conversation => (
+            <div
+              key={conversation.id}
+              className={`group flex items-center gap-1 w-full pl-3 pr-1 rounded-lg transition-colors ${
+                page === 'chat' && selectedConversationId === conversation.id
+                  ? 'bg-surface-3 text-white'
+                  : 'text-muted hover:text-white hover:bg-surface-3'
+              } ${chatBusy ? 'opacity-50' : ''}`}
+            >
+              <button
+                onClick={() => onSelectConversation(conversation.id)}
+                disabled={chatBusy}
+                className="flex-1 min-w-0 py-2 text-left disabled:cursor-default"
+              >
+                <span className="block truncate text-xs">{conversation.title}</span>
+              </button>
+              <button
+                disabled={chatBusy}
+                aria-label={`${conversation.title} 삭제`}
+                onClick={event => {
+                  event.stopPropagation()
+                  void onDeleteConversation(conversation.id)
+                }}
+                className="p-1.5 rounded opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-black/20 disabled:cursor-default"
+              >
+                <Trash2 size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Status */}
       <div className="p-4 space-y-3">
