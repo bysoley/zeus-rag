@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: #0d0d0d;
+  color: #f0f0f0;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Markdown inside assistant bubbles */
+.md h1,
+.md h2,
+.md h3 {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  margin-top: 0.8rem;
+  color: #f0f0f0;
+}
+.md h1 { font-size: 1.1rem; }
+.md h2 { font-size: 1rem; }
+.md h3 { font-size: 0.95rem; }
+.md p {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+.md ul,
+.md ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.md li {
+  margin-bottom: 0.2rem;
+  line-height: 1.65;
+}
+.md code {
+  background: #1e1e1e;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #fde047;
+}
+.md pre {
+  background: #161616;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 0.6rem;
+}
+.md pre code {
+  background: transparent;
+  padding: 0;
+  color: #e5e7eb;
+  font-size: 0.82em;
+}
+.md strong {
+  font-weight: 600;
+  color: #f5f5f5;
+}
+.md blockquote {
+  border-left: 2px solid #eab308;
+  padding-left: 0.75rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+.md a {
+  color: #fbbf24;
+  text-decoration: underline;
+}
