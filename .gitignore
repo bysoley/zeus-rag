@@ -1,6 +1,7 @@
 config.yaml
 .rag_index/
 history.sqlite3
+history.sqlite3-*
 __pycache__/
 *.pyc
 .venv/
