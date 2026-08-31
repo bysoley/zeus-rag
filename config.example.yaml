@@ -80,6 +80,15 @@ ollama:
 # 벡터 인덱스/매니페스트 저장 위치 — 반드시 모든 소스 경로 밖
 index_path: "./.rag_index"
 
+# 로컬 대화 기록 SQLite 파일
+history_path: "./history.sqlite3"
+
+# 현재 대화 문맥 제한
+chat_history_turns: 6
+chat_history_max_chars: 12000
+retrieval_history_turns: 2
+retrieval_query_max_chars: 4000
+
 # 검색 파라미터
 top_k: 5
 min_similarity: 0.3          # 이 값 미만이면 "로컬 자료에서 근거를 찾지 못했습니다" 응답

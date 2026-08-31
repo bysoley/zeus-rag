@@ -31,7 +31,6 @@ def test_markdown_breadcrumb_chunking():
     chunks = rag.chunk_markdown(text, chunk_size=1000, overlap=50)
     assert any(c.breadcrumb == "Title" for c in chunks)
     assert any(c.breadcrumb == "Title > Sub" for c in chunks)
-    print("OK: markdown breadcrumb chunking")
 
 
 def test_code_line_numbers():
@@ -40,7 +39,6 @@ def test_code_line_numbers():
     assert chunks[0].start_line == 1
     assert chunks[0].end_line == 80
     assert chunks[1].start_line == 71  # 80 - 10(overlap) + 1
-    print("OK: code chunk start_line/end_line")
 
 
 def test_stale_chunks_removed_on_shrink():
@@ -67,7 +65,6 @@ def test_stale_chunks_removed_on_shrink():
 
         remaining = index._collection.get(where={"source_id": "notes"})
         assert len(remaining["ids"]) == chunk_count_after
-        print("OK: stale chunks removed after file shrinks")
 
 
 def test_deleted_file_removed_from_index():
@@ -87,7 +84,6 @@ def test_deleted_file_removed_from_index():
         summary = index.reindex(sources)
         assert summary.deleted_files == 1
         assert index.stats()["document_count"] == 0
-        print("OK: deleted file removed from index")
 
 
 def test_source_filter():
@@ -110,7 +106,6 @@ def test_source_filter():
         only_code = index.query("apples", top_k=10, min_similarity=-1, where={"source_id": "code"})
         assert len(only_code) == 1
         assert all(r.source_id == "code" for r in only_code)
-        print("OK: source filter scopes query results")
 
 
 def test_excluded_files_not_indexed():
@@ -126,7 +121,6 @@ def test_excluded_files_not_indexed():
         assert "lib.js" not in names
         assert ".env" not in names
         assert "keep.md" in names
-        print("OK: excluded dirs/files not indexed")
 
 
 def test_path_env_overrides_path():
@@ -143,7 +137,6 @@ def test_path_env_overrides_path():
             {"path_env": env_key, "path": "/from/config"}
         )
         assert resolved == Path("/from/config").expanduser().resolve()
-        print("OK: path_env overrides path when set, falls back otherwise")
     finally:
         os.environ.pop(env_key, None)
 
@@ -158,20 +151,3 @@ def test_note_path_traversal_blocked():
         except vault.VaultPathError:
             raised = True
         assert raised
-        print("OK: note path traversal blocked")
-
-
-def main():
-    test_markdown_breadcrumb_chunking()
-    test_code_line_numbers()
-    test_stale_chunks_removed_on_shrink()
-    test_deleted_file_removed_from_index()
-    test_source_filter()
-    test_excluded_files_not_indexed()
-    test_path_env_overrides_path()
-    test_note_path_traversal_blocked()
-    print("모든 테스트 통과")
-
-
-if __name__ == "__main__":
-    main()
