@@ -224,6 +224,7 @@ def create_app(runtime: Runtime, mount_frontend: bool = True) -> FastAPI:
         content_parts: list[str] = []
         finalized = False
         try:
+            yield _sse({"type": "status", "stage": "retrieving"})
             query = history.build_retrieval_query(
                 request.message,
                 previous_messages,
@@ -259,10 +260,16 @@ def create_app(runtime: Runtime, mount_frontend: bool = True) -> FastAPI:
                 max_chars=runtime.config.get("chat_history_max_chars", 12000),
             )
             model_messages = chat_history + [{"role": "user", "content": prompt}]
+            yield _sse({"type": "status", "stage": "generating"})
+            ollama_config = runtime.config["ollama"]
             response = runtime.chat_client.chat(
-                model=runtime.config["ollama"]["chat_model"],
+                model=ollama_config["chat_model"],
                 messages=model_messages,
                 stream=True,
+                keep_alive=ollama_config.get("keep_alive", "30m"),
+                # ponytail: qwen3 계열은 모델 기본 context length가 262144라 num_ctx를
+                # 지정하지 않으면 매 요청마다 그만큼 KV 캐시를 잡아 크게 느려진다.
+                options={"num_ctx": ollama_config.get("num_ctx", 8192)},
             )
             for chunk in response:
                 content = chunk["message"]["content"]

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChevronDown, Send } from 'lucide-react'
+import { ChevronDown, Send, Square } from 'lucide-react'
 import type { Conversation, Message, SourceRef } from '../types'
 
 interface Props {
@@ -11,12 +11,20 @@ interface Props {
   onBusyChange: (busy: boolean) => void
 }
 
+type Stage = 'retrieving' | 'generating'
+
 interface StreamEvent {
-  type: 'delta' | 'complete' | 'error'
+  type: 'status' | 'delta' | 'complete' | 'error'
+  stage?: Stage
   content?: string
   error?: string
   message?: Message
   conversation?: Conversation
+}
+
+const STAGE_LABEL: Record<Stage, string> = {
+  retrieving: '관련 자료 검색 중...',
+  generating: '답변 생성 중...',
 }
 
 function formatSource(source: SourceRef) {
@@ -37,9 +45,11 @@ export default function Chat({
   const [scope, setScope] = useState('전체')
   const [isLoading, setIsLoading] = useState(false)
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [stage, setStage] = useState<Stage | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const locallyCreatedIdRef = useRef<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (scopeOptions.length > 0 && !scopeOptions.includes(scope)) {
@@ -113,8 +123,11 @@ export default function Chat({
     setInput('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
     setIsLoading(true)
+    setStage('retrieving')
     onBusyChange(true)
     let activeConversationId = conversationId
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     try {
       if (!activeConversationId) {
@@ -145,6 +158,7 @@ export default function Chat({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, scope }),
+        signal: controller.signal,
       })
       if (!response.ok || !response.body) {
         const detail = await response.json().catch(() => null) as { detail?: string } | null
@@ -165,15 +179,20 @@ export default function Chat({
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const event = JSON.parse(line.slice(6)) as StreamEvent
-          if (event.type === 'delta' && event.content) {
+          if (event.type === 'status' && event.stage) {
+            setStage(event.stage)
+          } else if (event.type === 'delta' && event.content) {
+            setStage(null)
             replaceLastAssistant(message => ({
               ...message,
               content: message.content + event.content,
             }))
           } else if (event.type === 'complete' && event.message) {
+            setStage(null)
             replaceLastAssistant(() => event.message!)
             if (event.conversation) onConversationChanged(event.conversation)
           } else if (event.type === 'error') {
+            setStage(null)
             replaceLastAssistant(message => event.message ?? {
               ...message,
               content: `오류: ${event.error ?? '답변 생성 실패'}`,
@@ -184,16 +203,26 @@ export default function Chat({
         }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.'
-      replaceLastAssistant(current => ({
-        ...current,
-        content: current.content || `오류: ${message}`,
-        status: 'error',
-      }))
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        replaceLastAssistant(current => ({ ...current, status: 'interrupted' }))
+      } else {
+        const message = error instanceof Error ? error.message : '네트워크 오류가 발생했습니다.'
+        replaceLastAssistant(current => ({
+          ...current,
+          content: current.content || `오류: ${message}`,
+          status: 'error',
+        }))
+      }
     } finally {
+      abortControllerRef.current = null
       setIsLoading(false)
+      setStage(null)
       onBusyChange(false)
     }
+  }
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort()
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -250,7 +279,12 @@ export default function Chat({
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                     </div>
                   ) : message.status === 'streaming' ? (
-                    <span className="inline-block w-1.5 h-4 bg-accent animate-pulse rounded-sm" />
+                    <span className="flex items-center gap-2 text-muted">
+                      <span className="inline-block w-1.5 h-4 bg-accent animate-pulse rounded-sm" />
+                      {index === messages.length - 1 && stage && (
+                        <span className="text-xs">{STAGE_LABEL[stage]}</span>
+                      )}
+                    </span>
                   ) : (
                     <span className="text-muted">응답 내용이 없습니다.</span>
                   )}
@@ -289,13 +323,23 @@ export default function Chat({
             className="flex-1 bg-transparent text-sm text-white placeholder-muted resize-none outline-none disabled:opacity-50"
             style={{ maxHeight: '160px', padding: 0, lineHeight: '1.5' }}
           />
-          <button
-            onClick={() => void handleSend()}
-            disabled={!input.trim() || isLoading || isHistoryLoading}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send size={14} className="text-white" />
-          </button>
+          {isLoading ? (
+            <button
+              onClick={handleStop}
+              title="응답 생성 중단"
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-surface-3 hover:bg-red-500/80 transition-colors"
+            >
+              <Square size={12} className="text-white" fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              onClick={() => void handleSend()}
+              disabled={!input.trim() || isHistoryLoading}
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-accent hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <Send size={14} className="text-white" />
+            </button>
+          )}
         </div>
       </div>
     </div>

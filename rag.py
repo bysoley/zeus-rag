@@ -640,7 +640,9 @@ def build_answer_prompt(question: str, retrieved: list[RetrievedChunk]) -> str:
         "답변에서 근거를 밝힐 때는 [S1]처럼 라벨만 인용하고, 실제 파일명은 언급하지 마라 "
         "(파일명은 앱이 별도로 붙인다). 문서에 없는 내용은 답하지 마라.\n\n"
         f"{labeled}\n\n"
-        f"질문: {question}\n"
+        # ponytail: qwen3는 기본적으로 짧은 질문에도 긴 <think> 추론을 생성해 응답이 느려진다.
+        # /no_think는 Qwen3가 인식하는 완화 스위치(완전 차단은 아님) — 확실히 끄려면 non-thinking 모델로 교체.
+        f"질문: {question} /no_think\n"
         "답변:"
     )
 

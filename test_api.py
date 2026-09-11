@@ -107,7 +107,9 @@ def test_conversation_crud_and_streaming_context(tmp_path: Path):
             json={"message": "첫 질문", "scope": "전체"},
         )
         first_events = parse_events(first)
-        assert [event["type"] for event in first_events] == ["delta", "delta", "complete"]
+        assert [event["type"] for event in first_events] == [
+            "status", "status", "delta", "delta", "complete",
+        ]
         assert first_events[-1]["message"]["content"] == "테스트 답변"
         assert first_events[-1]["message"]["sources"][0]["relative_path"] == "note.md"
 
@@ -140,9 +142,8 @@ def test_no_evidence_is_saved_without_model_call(tmp_path: Path):
             json={"message": "질문", "scope": "전체"},
         )
         events = parse_events(response)
-        assert len(events) == 1
-        assert events[0]["type"] == "complete"
-        assert events[0]["message"]["content"] == rag.NO_EVIDENCE_ANSWER
+        assert [event["type"] for event in events] == ["status", "complete"]
+        assert events[-1]["message"]["content"] == rag.NO_EVIDENCE_ANSWER
         assert chat.calls == []
 
 
@@ -154,7 +155,7 @@ def test_model_error_is_persisted(tmp_path: Path):
             f"/api/conversations/{conversation['id']}/messages",
             json={"message": "질문", "scope": "전체"},
         )
-        event = parse_events(response)[0]
+        event = parse_events(response)[-1]
         assert event["type"] == "error"
         assert event["message"]["status"] == "error"
         assert "모델 실패" in event["message"]["content"]
